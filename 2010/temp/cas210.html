@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng 20/10</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ff4081;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            opacity: 0.5;
+            /* Đặt độ mờ cho video */
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+
+        h1 {
+            z-index: 10;
+            font-size: 48px;
+            text-align: center;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5;
+        }
+
+        .message {
+            z-index: 15;
+            text-align: center;
+            font-size: 32px;
+            color: #ff4081;
+            font-weight: bold;
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background">
+        <video id="backgroundVideo" autoplay muted loop>
+            <source src="./video/[Douyin] Ngắm nhìn vẻ đẹp của các loài hoa (online-video-cutter.com).mp4"
+                type="video/mp4"> <!-- Đường dẫn tới video -->
+            Trình duyệt của bạn không hỗ trợ video.
+        </video>
+    </div>
+    <div class="overlay"></div> <!-- Phần tử chứa lớp mờ màu đen -->
+    <h1 class="message">Chúc Mừng 20/10 - Chúc các bạn luôn hạnh phúc và tỏa sáng!</h1>
+    <canvas id="flowerCanvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        const canvas = document.getElementById('flowerCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const numFlowers = 500;
+        const flowers = [];
+        const heartPath = [];
+        let isHeartAnimation = false;
+
+        class Flower {
+            constructor(x, y, radius, color, id) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.dx = (Math.random() - 0.5) * 3;
+                this.dy = (Math.random() - 0.5) * 3;
+                this.opacity = Math.max(Math.random(), 0.9);
+                this.id = id;
+                this.pathAngle = 0;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.fill();
+            }
+
+            update() {
+                if (!isHeartAnimation || !heartPath[this.id]) {
+                    this.x += this.dx;
+                    this.y += this.dy;
+                    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                        this.dx = -this.dx;
+                    }
+                    if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+                        this.dy = -this.dy;
+                    }
+                } else {
+                    this.pathAngle += 0.05;
+                    if (this.pathAngle > 2 * Math.PI) this.pathAngle = 0;
+
+                    const targetX = heartPath[this.id].x;
+                    const targetY = heartPath[this.id].y;
+                    this.x = targetX + Math.cos(this.pathAngle) * 20;
+                    this.y = targetY + Math.sin(this.pathAngle) * 20;
+                }
+
+                this.opacity += (Math.random() - 0.5) * 0.05;
+                this.opacity = Math.min(Math.max(this.opacity, 0.1), 1);
+
+                this.draw();
+            }
+        }
+
+        function createFlowers() {
+            for (let i = 0; i < numFlowers; i++) {
+                const radius = Math.random() * 3 + 5;
+                const x = Math.random() * (canvas.width - radius * 2) + radius;
+                const y = Math.random() * (canvas.height - radius * 2) + radius;
+                const color = `255, ${Math.floor(Math.random() * 150 + 100)}, ${Math.floor(Math.random() * 150 + 100)}`;
+                flowers.push(new Flower(x, y, radius, color, i));
+            }
+        }
+
+        function animateFlowers() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            flowers.forEach(flower => {
+                flower.update();
+            });
+            requestAnimationFrame(animateFlowers);
+        }
+
+        function createHeartShape() {
+            const points = [];
+            for (let t = 0; t < Math.PI * 2; t += 0.05) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                points.push({ x: x * 15, y: -y * 15 });
+            }
+            return points;
+        }
+
+        function arrangeIntoHeart() {
+            const heartShape = createHeartShape();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            anime({
+                targets: flowers,
+                x: (flower, i) => {
+                    if (i < heartShape.length) {
+                        heartPath[i] = { x: centerX + heartShape[i].x, y: centerY + heartShape[i].y };
+                        return heartPath[i].x;
+                    }
+                    return flower.x;
+                },
+                y: (flower, i) => {
+                    if (i < heartShape.length) {
+                        return heartPath[i].y;
+                    }
+                    return flower.y;
+                },
+                easing: 'easeInOutExpo',
+                duration: 3000,
+                delay: anime.stagger(0),
+                complete: () => {
+                    isHeartAnimation = true;
+
+                    setTimeout(() => {
+                        explodeHeart();
+                    }, 4000);
+                }
+            });
+        }
+
+        function explodeHeart() {
+            isHeartAnimation = false;
+
+            anime({
+                targets: flowers,
+                x: (flower, i) => flower.x + (Math.random() - 0.5) * 200,
+                y: (flower, i) => flower.y + (Math.random() - 0.5) * 200,
+                easing: 'easeInOutExpo',
+                duration: 3000,
+                delay: anime.stagger(5),
+                complete: () => {
+                    setTimeout(() => {
+                        arrangeIntoHeart();
+                    }, 3000);
+                }
+            });
+        }
+
+        // Thêm vòng lặp video
+        const backgroundVideo = document.getElementById('backgroundVideo');
+        backgroundVideo.addEventListener('ended', () => {
+            backgroundVideo.currentTime = 0; // Quay lại đầu video
+            backgroundVideo.play(); // Phát video
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        createFlowers();
+        animateFlowers();
+
+        setTimeout(() => {
+            arrangeIntoHeart();
+        }, 3000);
+    </script>
+</body>
+
+</html>

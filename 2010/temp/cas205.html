@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng 20/10</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-image: url('https://res.allmacwallpaper.com/get/MacBook-Air-13-inch-wallpapers/Light-Pink-Roses-1440x900/7311-4.jpg'); /* Thay đổi đường dẫn đến ảnh của bạn */
+            background-size: cover; /* Làm cho ảnh phủ kín toàn bộ màn hình */
+            background-position: center; /* Đặt ảnh ở giữa màn hình */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ff4081;
+        }
+
+        h1 {
+            position: absolute;
+            z-index: 10;
+            font-size: 48px;
+            text-align: center;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .message {
+            position: absolute;
+            z-index: 15;
+            text-align: center;
+            font-size: 32px;
+            color: #ff4081;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="message">Chúc Mừng 20/10 - Chúc các bạn luôn hạnh phúc và tỏa sáng!</h1>
+    <canvas id="flowerCanvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        const canvas = document.getElementById('flowerCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const numFlowers = 300;
+        const flowers = [];
+        const heartPath = [];
+        let isHeartAnimation = false;
+
+        class Flower {
+            constructor(x, y, radius, color, id) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.dx = (Math.random() - 0.5) * 3;
+                this.dy = (Math.random() - 0.5) * 3;
+                this.opacity = Math.random();
+                this.id = id;
+                this.pathAngle = 0; // Angle for circular movement in heart path
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.fill();
+            }
+
+            update() {
+                if (!isHeartAnimation || !heartPath[this.id]) {
+                    // Normal movement
+                    this.x += this.dx;
+                    this.y += this.dy;
+                    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                        this.dx = -this.dx;
+                    }
+                    if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+                        this.dy = -this.dy;
+                    }
+                } else {
+                    // Follow heart path
+                    this.pathAngle += 0.05; // Move along the path
+                    if (this.pathAngle > 2 * Math.PI) this.pathAngle = 0;
+
+                    const targetX = heartPath[this.id].x;
+                    const targetY = heartPath[this.id].y;
+                    this.x = targetX + Math.cos(this.pathAngle) * 20; // Circular movement around target
+                    this.y = targetY + Math.sin(this.pathAngle) * 20;
+                }
+
+                this.opacity += (Math.random() - 0.5) * 0.05;
+                this.opacity = Math.min(Math.max(this.opacity, 0.1), 1);
+
+                this.draw();
+            }
+        }
+
+        function createFlowers() {
+            for (let i = 0; i < numFlowers; i++) {
+                const radius = Math.random() * 3 + 2;
+                const x = Math.random() * (canvas.width - radius * 2) + radius;
+                const y = Math.random() * (canvas.height - radius * 2) + radius;
+                const color = `255, ${Math.floor(Math.random() * 150 + 100)}, ${Math.floor(Math.random() * 150 + 100)}`;
+                flowers.push(new Flower(x, y, radius, color, i));
+            }
+        }
+
+        function animateFlowers() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            flowers.forEach(flower => {
+                flower.update();
+            });
+            requestAnimationFrame(animateFlowers);
+        }
+
+        function createHeartShape() {
+            const points = [];
+            for (let t = 0; t < Math.PI * 2; t += 0.05) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                points.push({ x: x * 15, y: -y * 15 }); // Scale heart shape
+            }
+            return points;
+        }
+
+        function arrangeIntoHeart() {
+            const heartShape = createHeartShape();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            anime({
+                targets: flowers,
+                x: (flower, i) => {
+                    if (i < heartShape.length) {
+                        heartPath[i] = { x: centerX + heartShape[i].x, y: centerY + heartShape[i].y };
+                        return heartPath[i].x;
+                    }
+                    return flower.x;
+                },
+                y: (flower, i) => {
+                    if (i < heartShape.length) {
+                        return heartPath[i].y;
+                    }
+                    return flower.y;
+                },
+                easing: 'easeInOutExpo',
+                duration: 2000,
+                delay: anime.stagger(10),
+                complete: () => {
+                    isHeartAnimation = true;
+
+                    setTimeout(() => {
+                        explodeHeart();
+                    }, 2000); // Bung ra sau 2 giây
+                }
+            });
+        }
+
+        function explodeHeart() {
+            isHeartAnimation = false;
+
+            anime({
+                targets: flowers,
+                x: (flower, i) => flower.x + (Math.random() - 0.5) * 200, // Bung ra ngẫu nhiên
+                y: (flower, i) => flower.y + (Math.random() - 0.5) * 200,
+                easing: 'easeInOutExpo',
+                duration: 1000,
+                delay: anime.stagger(10),
+                complete: () => {
+                    // Tạo lại hình trái tim sau một thời gian ngắn
+                    setTimeout(() => {
+                        arrangeIntoHeart();
+                    }, 3000); // Thời gian chờ trước khi tạo lại hình trái tim
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        createFlowers();
+        animateFlowers();
+
+        setTimeout(() => {
+            arrangeIntoHeart();
+        }, 3000);
+    </script>
+</body>
+</html>
